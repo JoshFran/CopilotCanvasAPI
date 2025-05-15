@@ -13,10 +13,15 @@ class CourseRequest(BaseModel):
 
 @app.post("/getFiles")
 def get_files(req: CourseRequest):
+    print("Received request for courseId:", req.courseId)
     canvas = Canvas(API_URL, TOKEN)
     course = canvas.get_course(req.courseId)
+    course_files = course.get_files()
+    print("Retrieved files:", course_files)
+
     files = [
         {"id": f.id, "display_name": f.display_name, "url": f.url}
-        for f in course.get_files()
+        for f in course_files
     ]
     return {"fileCount": len(files), "files": files}
+
