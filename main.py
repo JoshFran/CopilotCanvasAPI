@@ -1,20 +1,29 @@
-from fastapi import FastAPI, Query
-from canvasapi import Canvas
+from fastapi import FastAPI
+from pydantic import BaseModel
 import os
+from canvasapi import Canvas
 
 API_URL = "https://webcourses.ucf.edu"
 TOKEN = os.getenv("CANVAS_TOKEN")
 
 app = FastAPI()
 
-@app.get("/getFiles")
-def get_files(courseId: int = Query(...)):
+class CourseRequest(BaseModel):
+    courseId: int
+
+@app.get("/")
+def root():
+    return "Canvas Assignment API is running."
+
+@app.get("/getAssignments")
+def get_assignments(courseId: int):
     canvas = Canvas(API_URL, TOKEN)
     course = canvas.get_course(courseId)
-    
-    files = [
-        {"id": f.id, "display_name": f.display_name, "url": f.url}
-        for f in course.get_files()
-    ]
+    assignments = course.get_assignments()
 
-    return {"fileCount": len(files), "files": files}
+    assignment_names = [a.name for a in assignments]
+    
+    if not assignment_names:
+        return "There are no assignments in this course."
+
+    return f"There are {len(assignment_names)} assignments: " + ", ".join(assignment_names)
